@@ -14,9 +14,10 @@ import com.dubedivine.tracker.R
 import android.R.attr.y
 import android.R.attr.x
 import android.view.MotionEvent
+import com.dubedivine.tracker.activity.MainActivity
 
 
-class MainControlService() : Service() {
+class MainControlService : Service() {
 
     private lateinit var mWindowManager: WindowManager
     private lateinit var mMainControlView: View
@@ -69,6 +70,7 @@ class MainControlService() : Service() {
 
             override fun onTouch(v: View, event: MotionEvent): Boolean {
                 when (event.action) {
+                    // when the user presses down on the object then we do the following
                     MotionEvent.ACTION_DOWN -> {
 
                         //remember the initial position.
@@ -88,7 +90,7 @@ class MainControlService() : Service() {
                         //to identify if the user clicked the view or not.
                         if (lastAction == MotionEvent.ACTION_DOWN) {
                             //Open the chat conversation click.
-                            val intent = Intent(this@MainControlService, MainControlService::class.java)
+                            val intent = Intent(this@MainControlService, MainActivity::class.java)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             startActivity(intent)
 
