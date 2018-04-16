@@ -6,25 +6,19 @@ import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.dubedivine.tracker.R
-import android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION
 import android.content.Intent
 import android.net.Uri
-import android.provider.Settings.canDrawOverlays
 import android.os.Build
 import android.provider.Settings
-import android.view.View
 import android.widget.Button
 import com.dubedivine.tracker.service.MainControlService
 import android.widget.Toast
-import android.content.Context.CAMERA_SERVICE
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.support.v4.app.FragmentActivity
 import android.util.Log
-import com.dubedivine.tracker.util.ActivityExtentions.toast
+import com.dubedivine.tracker.util.ActivityExtensions.toast
 import android.os.Handler
 import android.os.Message
-import android.Manifest.permission
 import android.support.v4.app.ActivityCompat
 import android.content.pm.PackageManager
 import android.hardware.camera2.*
@@ -116,7 +110,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         } else {
             toast("PERMISSION_ALREADY_GRANTED")
             try {
-                mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
+                mCameraManager.openCamera(mCameraIDsList[0], mCameraStateCB, Handler())
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
             }
@@ -150,7 +144,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         }
     }
 
-
     /**
      * Set and initialize the view elements.
      */
@@ -179,13 +172,13 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
     }
 
     override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-        mCameraSurface = holder!!.surface;
-        mSurfaceCreated = true;
-        mHandler.sendEmptyMessage(MSG_SURFACE_READY);
+        mCameraSurface = holder!!.surface
+        mSurfaceCreated = true
+        mHandler.sendEmptyMessage(MSG_SURFACE_READY)
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder?) {
-        mSurfaceCreated = false;
+        mSurfaceCreated = false
     }
 
     override fun surfaceCreated(holder: SurfaceHolder?) {
@@ -198,7 +191,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_CAMERA -> if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
                 try {
-                    mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
+                    mCameraManager.openCamera(mCameraIDsList[0], mCameraStateCB, Handler())
                 } catch (e: CameraAccessException) {
                     e.printStackTrace()
                 }
@@ -223,36 +216,35 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
 
     private fun configureCamera() {
         // prepare list of surfaces to be used in capture requests
-        val sfl = ArrayList<Surface>();
+        val sfl = ArrayList<Surface>()
 
         sfl.add(mCameraSurface!!) // surface for viewfinder preview
 
         // configure camera with all the surfaces to be ever used
         try {
-            mCameraDevice!!.createCaptureSession(sfl,
-                    CaptureSessionListener(), null);
+            mCameraDevice!!.createCaptureSession(sfl, CaptureSessionListener(), null)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
 
-        mIsCameraConfigured = true;
+        mIsCameraConfigured = true
     }
 
     inner class CaptureSessionListener : CameraCaptureSession.StateCallback() {
         override fun onConfigureFailed(session: CameraCaptureSession?) {
-            Log.d(TAG, "CaptureSessionConfigure failed");
+            Log.d(TAG, "CaptureSessionConfigure failed")
         }
 
         override fun onConfigured(session: CameraCaptureSession?) {
-            Log.d(TAG, "CaptureSessionConfigure onConfigured");
-            mCaptureSession = session;
+            Log.d(TAG, "CaptureSessionConfigure onConfigured")
+            mCaptureSession = session
 
             try {
                 val previewRequestBuilder = mCameraDevice!!
-                        .createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
-                previewRequestBuilder.addTarget(mCameraSurface);
+                        .createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                previewRequestBuilder.addTarget(mCameraSurface)
                 mCaptureSession!!.setRepeatingRequest(previewRequestBuilder.build(),
-                        null, null);
+                        null, null)
             } catch (e: CameraAccessException) {
                 Log.d(TAG, "setting up preview failed");
                 e.printStackTrace();
