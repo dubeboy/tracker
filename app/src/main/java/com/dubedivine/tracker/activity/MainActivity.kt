@@ -2,7 +2,10 @@ package com.dubedivine.tracker.activity
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
+import android.content.DialogInterface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.dubedivine.tracker.R
@@ -13,8 +16,6 @@ import android.provider.Settings
 import android.widget.Button
 import com.dubedivine.tracker.service.MainControlService
 import android.widget.Toast
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import android.util.Log
 import com.dubedivine.tracker.util.ActivityExtensions.toast
 import android.os.Handler
@@ -23,7 +24,14 @@ import android.support.v4.app.ActivityCompat
 import android.content.pm.PackageManager
 import android.hardware.camera2.*
 import android.support.v4.content.ContextCompat
-import android.view.Surface
+import android.view.*
+import android.widget.TextView
+import com.dubedivine.tracker.BuildConfig
+import kotlinx.android.synthetic.main.activity_main.*
+import org.openalpr.OpenALPR
+import java.io.File
+
+
 
 
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callback {
@@ -40,28 +48,26 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
     private var mIsCameraConfigured: Boolean = false
     private var mSurfaceCreated = true
     private var mCameraSurface: Surface? = null
+    private lateinit var dialog: AlertDialog.Builder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //Check if the application has draw over other apps permission or not?
-        //This permission is by default available for API<23. But for API > 23
-        //you have to ask for the permission in runtime.
+        dialog = createAlertDialog()
+
+        // the is for the over head
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
 
-            //If the draw over permission is not available open the settings screen
-            //to grant the permission.
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:$packageName"))
+            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
             startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION)
         } else {
             initializeView()
         }
 
 //        this.mBtnCapture = findViewById(R.id.surfaceView) as Button
-        this.mSurfaceView = findViewById<SurfaceView>(R.id.surfaceView)
-        this.mSurfaceHolder = this.mSurfaceView.getHolder()
+        this.mSurfaceView = findViewById(R.id.surfaceView)
+        this.mSurfaceHolder = this.mSurfaceView.holder
         this.mSurfaceHolder.addCallback(this)
         this.mCameraManager = this.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
@@ -93,6 +99,51 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         }
 
 
+
+        // for now I can do it easy just capture the images at an interval
+        fab_capture_plate.setOnClickListener({
+          //  mCameraDevice?
+        })
+
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        MenuInflater(this).inflate(R.menu.main_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+
+    private fun createAlertDialog(): AlertDialog.Builder {
+        val view = layoutInflater.inflate(R.layout.layout_dialog_main_input_lost_number_plate, null)
+        val builder = AlertDialog.Builder(this)
+        builder.setView(view).setPositiveButton("REPORT", DialogInterface.OnClickListener
+        { dialog, which ->
+            val numberPlate = view.findViewById<TextView>(R.id.et_number_plate)
+            reportNumberPlate(numberPlate.text)
+            dialog.dismiss()
+        } ).create()
+
+        return builder
+    }
+
+    private fun reportNumberPlate(text: CharSequence?) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+
+        when (item!!.itemId) {
+            R.id.menu_main_report -> {
+                dialog.show()
+            }
+            R.id.menu_show_reported_cars -> {
+               startActivity(StolenCars.getStartIntent(this))
+            }
+
+        }
+
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onStart() {
@@ -157,7 +208,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         if (requestCode == CODE_DRAW_OVER_OTHER_APP_PERMISSION) {
 
-            //Check if the permission is granted or not.
             if (resultCode == Activity.RESULT_OK) {
                 initializeView()
             } else { //Permission is not available
@@ -247,19 +297,29 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
                         null, null)
             } catch (e: CameraAccessException) {
                 Log.d(TAG, "setting up preview failed");
-                e.printStackTrace();
+                e.printStackTrace()
             }
         }
-
     }
 
+
+    fun processImage(image: File): String {
+//        val ANDROID_DATA_DIR = "/data/data/com.sandro.openalprsample"
+        val openAlprConfFile = ANDROID_DATA_DIR + File.separatorChar + "runtime_data" + File.separatorChar + "openalpr.conf"
+        return OpenALPR.Factory
+                .create(this@MainActivity, ANDROID_DATA_DIR)
+                .recognizeWithCountryRegionNConfig("us", "", image.absolutePath, openAlprConfFile, 10)
+    }
 
     companion object {
         private const val CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084
         private const val TAG = "MAIN_ACTIVITY"
         private const val MY_PERMISSIONS_REQUEST_CAMERA = 1242
-        private val MSG_CAMERA_OPENED = 1
-        private val MSG_SURFACE_READY = 2
+        private const val MSG_CAMERA_OPENED = 1
+        private const val MSG_SURFACE_READY = 2
+
+        const val ANDROID_DATA_DIR = "/data/data/${BuildConfig.APPLICATION_ID}"
+
 
     }
 }

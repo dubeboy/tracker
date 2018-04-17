@@ -7,8 +7,6 @@
     tools:context=".activity.MainActivity"
     tools:layout_editor_absoluteY="81dp">
 
-
-
     <SurfaceView
         android:id="@+id/surfaceView"
         android:layout_width="match_parent"
@@ -38,5 +36,41 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginEnd="0dp"
+        app:cardCornerRadius="0dp"
+        app:cardElevation="3dp"
+        android:layout_marginStart="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="wrap_content"
+            android:padding="5dp"
+            android:layout_gravity="center|left"
+            android:text="Scanning..."
+            android:layout_height="wrap_content" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_capture_plate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:src="@drawable/ic_camera_alt_black_24dp"
+            android:layout_marginRight="10dp"
+            android:layout_gravity="center|right"
+            app:srcCompat="@color/cardview_shadow_end_color"
+            tools:layout_editor_absoluteX="206dp"
+            tools:layout_editor_absoluteY="160dp" />
+
+    </android.support.v7.widget.CardView>
+
+
 
 </android.support.constraint.ConstraintLayout>

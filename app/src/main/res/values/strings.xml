@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Tracker</string>
+    <string name="report">REPORT</string>
+    <string name="title_activity_stolen_cars">StolenCars</string>
 </resources>
