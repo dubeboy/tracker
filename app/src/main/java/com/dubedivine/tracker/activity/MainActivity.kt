@@ -22,7 +22,9 @@ import android.os.Handler
 import android.os.Message
 import android.support.v4.app.ActivityCompat
 import android.content.pm.PackageManager
+import android.graphics.ImageFormat
 import android.hardware.camera2.*
+import android.media.ImageReader
 import android.support.v4.content.ContextCompat
 import android.view.*
 import android.widget.TextView
@@ -49,6 +51,9 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
     private var mSurfaceCreated = true
     private var mCameraSurface: Surface? = null
     private lateinit var dialog: AlertDialog.Builder
+    private var captureRequest: CaptureRequest? = null
+    private var imageReader: ImageReader? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -108,6 +113,16 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
     }
 
 
+
+    fun captureImage() {
+       val  builder: CaptureRequest.Builder  = mCameraDevice!!.createCaptureRequest (CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
+        builder.set (CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+        builder.set (CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
+        builder.addTarget (imageReader!!.surface)
+        captureRequest = builder.build ()
+    }
+
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         MenuInflater(this).inflate(R.menu.main_menu, menu)
         return super.onCreateOptionsMenu(menu)
@@ -162,11 +177,21 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
             toast("PERMISSION_ALREADY_GRANTED")
             try {
                 mCameraManager.openCamera(mCameraIDsList[0], mCameraStateCB, Handler())
+                imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */)
+                imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
+                Log.d(TAG, "imageReader created");
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
             }
 
         }
+    }
+
+    object onImageAvailableListener : ImageReader.OnImageAvailableListener {
+        override fun onImageAvailable(reader: ImageReader?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
     }
 
 
