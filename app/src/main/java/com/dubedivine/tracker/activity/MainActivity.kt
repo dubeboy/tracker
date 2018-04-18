@@ -29,6 +29,7 @@ import android.support.v4.content.ContextCompat
 import android.view.*
 import android.widget.TextView
 import com.dubedivine.tracker.BuildConfig
+import com.dubedivine.tracker.service.CameraService
 import kotlinx.android.synthetic.main.activity_main.*
 import org.openalpr.OpenALPR
 import java.io.File
@@ -60,6 +61,9 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         setContentView(R.layout.activity_main)
 
         dialog = createAlertDialog()
+
+        val intent = Intent(this, CameraService::class.java)
+        startService(intent)
 
         // the is for the over head
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
@@ -165,18 +169,24 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         super.onStart()
 
         //requesting permission
-        val permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val permissionCameraCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val permissionWriteExtStorageCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val permissionReadExtStorageCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val permissionCheck = permissionCameraCheck + permissionWriteExtStorageCheck + permissionReadExtStorageCheck // should be 0 + 0 + 0 = 0
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
 
             } else {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), MY_PERMISSIONS_REQUEST_CAMERA)
+                ActivityCompat.requestPermissions(this, arrayOf(
+                        Manifest.permission.CAMERA,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        Manifest.permission.READ_EXTERNAL_STORAGE), MY_PERMISSIONS_REQUEST_CAMERA)
                 toast("request permission")
             }
         } else {
             toast("PERMISSION_ALREADY_GRANTED")
             try {
-                mCameraManager.openCamera(mCameraIDsList[0], mCameraStateCB, Handler())
+                mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
                 imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */)
                 imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
                 Log.d(TAG, "imageReader created");
@@ -266,7 +276,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_CAMERA -> if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
                 try {
-                    mCameraManager.openCamera(mCameraIDsList[0], mCameraStateCB, Handler())
+                    mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
                 } catch (e: CameraAccessException) {
                     e.printStackTrace()
                 }
