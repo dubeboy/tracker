@@ -47,7 +47,7 @@ class CameraService : Service() {
 
     private val cameraSessionStateCallBack = object : CameraCaptureSession.StateCallback() {
         override fun onConfigureFailed(session: CameraCaptureSession?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
         }
 
         override fun onConfigured(session: CameraCaptureSession?) {
@@ -86,18 +86,17 @@ class CameraService : Service() {
                 .recognizeWithCountryRegionNConfig("us", "", image.absolutePath, openAlprConfFile, 10)
     }
 
-
     private fun processImage(image: Image) {
-          var buffer: ByteBuffer? = null
+        var buffer: ByteBuffer? = null
         var bytes: ByteArray
-        var success = false;
-        var file: File =  File(Environment.getExternalStorageDirectory().toString() + "/Pictures/image.jpg")
+        var success = false
+        var file = File(Environment.getExternalStorageDirectory().toString() + "/Pictures/image.jpg")
         var output: FileOutputStream? = null
 
-        if(image.format == ImageFormat.JPEG) {
+        if (image.format == ImageFormat.JPEG) {
             buffer = image.planes[0].buffer
-            bytes =  ByteArray(buffer.remaining()) // makes byte array large enough to hold image
-            buffer.get(bytes); // copies image from buffer to byte array
+            bytes = ByteArray(buffer.remaining()) // makes byte array large enough to hold image
+            buffer.get(bytes) // copies image from buffer to byte array
             try {
                 output = FileOutputStream(file)
                 output.write(bytes)    // write the byte array to file
@@ -105,9 +104,9 @@ class CameraService : Service() {
                 success = true
                 val result = analyseImage(file)
                 Log.d(TAG, "the result is $result")
-            } catch ( e: FileNotFoundException) {
+            } catch (e: FileNotFoundException) {
                 e.printStackTrace()
-            } catch ( e: IOException) {
+            } catch (e: IOException) {
                 e.printStackTrace()
             } finally {
                 image.close() // close this to free up buffer for other images
@@ -126,18 +125,11 @@ class CameraService : Service() {
 
 
     private fun getCamera(manager: CameraManager): String? {
-        try {
-            for (cameraId in manager.cameraIdList) {
-                val characteristics = manager.getCameraCharacteristics(cameraId)
-                val cOrientation = characteristics.get(CameraCharacteristics.LENS_FACING)
-                if (cOrientation != CAMERA_CHOICE) {
-                    return cameraId
-                }
-            }
-        } catch (e: CameraAccessException) {
-            e.printStackTrace()
+        return try {
+            manager.cameraIdList[0]
+        } catch (ce: CameraAccessException) {
+            ce.printStackTrace(); null
         }
-        return null
     }
 
 
@@ -152,7 +144,7 @@ class CameraService : Service() {
 
     override fun onDestroy() {
         try {
-            cameraCaptureSession!!.abortCaptures();
+            cameraCaptureSession!!.abortCaptures()
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.message)
         }
@@ -165,9 +157,9 @@ class CameraService : Service() {
     }
 
     private fun readyCamera() {
-         val manager =  getSystemService(CAMERA_SERVICE) as CameraManager
+        val manager = getSystemService(CAMERA_SERVICE) as CameraManager
         try {
-            val pickedCamera = getCamera(manager);
+            val pickedCamera = getCamera(manager)
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 // send a notification to the top of the screen asking the user to open the app so that
                 // we can grant it permissions
@@ -177,19 +169,19 @@ class CameraService : Service() {
             imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */);
             imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
             Log.d(TAG, "imageReader created");
-        } catch ( e: CameraAccessException){
+        } catch (e: CameraAccessException) {
             Log.e(TAG, e.message)
         }
     }
 
     private fun createCaptureRequest(): CaptureRequest? {
-        try {
+        return try {
             val builder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
             builder.addTarget(imageReader!!.surface)
-            return builder.build()
+            builder.build()
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.message)
-            return null
+            null
         }
     }
 

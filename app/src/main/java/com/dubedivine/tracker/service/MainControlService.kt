@@ -62,6 +62,7 @@ class MainControlService : Service() {
 //Drag and move chat head using user's touch action.
         val chatHeadImage = mMainControlView.findViewById(R.id.chat_head_profile_iv) as ImageView
         chatHeadImage.setOnTouchListener(object : View.OnTouchListener {
+
             private var lastAction: Int = 0
             private var initialX: Int = 0
             private var initialY: Int = 0

@@ -3,7 +3,6 @@ package com.dubedivine.tracker.activity
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.support.v7.app.AppCompatActivity
@@ -35,10 +34,7 @@ import org.openalpr.OpenALPR
 import java.io.File
 
 
-
-
 class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callback {
-
 
     private lateinit var mSurfaceView: SurfaceView
     private lateinit var mSurfaceHolder: SurfaceHolder
@@ -189,7 +185,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
                 mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
                 imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */)
                 imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
-                Log.d(TAG, "imageReader created");
+                Log.d(TAG, "imageReader created")
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
             }
@@ -298,7 +294,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         return true
     }
 
-
     private fun configureCamera() {
         // prepare list of surfaces to be used in capture requests
         val sfl = ArrayList<Surface>()
@@ -336,7 +331,6 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
             }
         }
     }
-
 
     fun processImage(image: File): String {
 //        val ANDROID_DATA_DIR = "/data/data/com.sandro.openalprsample"
