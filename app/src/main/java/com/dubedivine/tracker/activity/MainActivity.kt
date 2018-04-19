@@ -34,21 +34,21 @@ import org.openalpr.OpenALPR
 import java.io.File
 
 
-class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callback {
+class MainActivity : AppCompatActivity()/*, SurfaceHolder.Callback, Handler.Callback*/ {
 
-    private lateinit var mSurfaceView: SurfaceView
-    private lateinit var mSurfaceHolder: SurfaceHolder
-    private lateinit var mCameraManager: CameraManager
-    private lateinit var mCameraIDsList: Array<out String>
-    private lateinit var mCameraStateCB: CameraDevice.StateCallback
-    private var mCameraDevice: CameraDevice? = null
-    private var mCaptureSession: CameraCaptureSession? = null
-    private val mHandler = Handler(this)
-    private var mIsCameraConfigured: Boolean = false
-    private var mSurfaceCreated = true
-    private var mCameraSurface: Surface? = null
+//    private lateinit var mSurfaceView: SurfaceView
+//    private lateinit var mSurfaceHolder: SurfaceHolder
+//    private lateinit var mCameraManager: CameraManager
+//    private lateinit var mCameraIDsList: Array<out String>
+//    private lateinit var mCameraStateCB: CameraDevice.StateCallback
+//    private var mCameraDevice: CameraDevice? = null
+//    private var mCaptureSession: CameraCaptureSession? = null
+//    private val mHandler = Handler(this)
+//    private var mIsCameraConfigured: Boolean = false
+//    private var mSurfaceCreated = true
+//    private var mCameraSurface: Surface? = null
     private lateinit var dialog: AlertDialog.Builder
-    private var captureRequest: CaptureRequest? = null
+//    private var captureRequest: CaptureRequest? = null
     private var imageReader: ImageReader? = null
 
 
@@ -71,37 +71,37 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         }
 
 //        this.mBtnCapture = findViewById(R.id.surfaceView) as Button
-        this.mSurfaceView = findViewById(R.id.surfaceView)
-        this.mSurfaceHolder = this.mSurfaceView.holder
-        this.mSurfaceHolder.addCallback(this)
-        this.mCameraManager = this.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+//        this.mSurfaceView = findViewById(R.id.surfaceView)
+//        this.mSurfaceHolder = this.mSurfaceView.holder
+//        this.mSurfaceHolder.addCallback(this)
+//        this.mCameraManager = this.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
-        try {
-            mCameraIDsList = this.mCameraManager.cameraIdList
-            for (id in mCameraIDsList) {
-                Log.v(TAG, "CameraID: $id")
-            }
-        } catch (e: CameraAccessException) {
-            e.printStackTrace()
-            toast("Your phone does not have a camera")
-            finish()
-        }
+//        try {
+//            mCameraIDsList = this.mCameraManager.cameraIdList
+//            for (id in mCameraIDsList) {
+//                Log.v(TAG, "CameraID: $id")
+//            }
+//        } catch (e: CameraAccessException) {
+//            e.printStackTrace()
+//            toast("Your phone does not have a camera")
+//            finish()
+//        }
 
-        mCameraStateCB = object : CameraDevice.StateCallback() {
-            override fun onOpened(camera: CameraDevice) {
-                toast("onOpened")
-                mCameraDevice = camera
-                mHandler.sendEmptyMessage(MSG_CAMERA_OPENED)
-            }
-
-            override fun onDisconnected(camera: CameraDevice) {
-                toast("onDisconnected")
-            }
-
-            override fun onError(camera: CameraDevice, error: Int) {
-                toast("onError")
-            }
-        }
+//        mCameraStateCB = object : CameraDevice.StateCallback() {
+//            override fun onOpened(camera: CameraDevice) {
+//                toast("onOpened")
+//                mCameraDevice = camera
+//                mHandler.sendEmptyMessage(MSG_CAMERA_OPENED)
+//            }
+//
+//            override fun onDisconnected(camera: CameraDevice) {
+//                toast("onDisconnected")
+//            }
+//
+//            override fun onError(camera: CameraDevice, error: Int) {
+//                toast("onError")
+//            }
+//        }
 
 
 
@@ -114,13 +114,13 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
 
 
 
-    fun captureImage() {
-       val  builder: CaptureRequest.Builder  = mCameraDevice!!.createCaptureRequest (CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
-        builder.set (CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
-        builder.set (CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
-        builder.addTarget (imageReader!!.surface)
-        captureRequest = builder.build ()
-    }
+//    fun captureImage() {
+//       val  builder: CaptureRequest.Builder  = mCameraDevice!!.createCaptureRequest (CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
+//        builder.set (CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+//        builder.set (CaptureRequest.FLASH_MODE, CaptureRequest.FLASH_MODE_OFF)
+//        builder.addTarget (imageReader!!.surface)
+//        captureRequest = builder.build ()
+//    }
 
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -169,6 +169,7 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         val permissionWriteExtStorageCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
         val permissionReadExtStorageCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
         val permissionCheck = permissionCameraCheck + permissionWriteExtStorageCheck + permissionReadExtStorageCheck // should be 0 + 0 + 0 = 0
+
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
 
@@ -182,10 +183,10 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         } else {
             toast("PERMISSION_ALREADY_GRANTED")
             try {
-                mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
-                imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */)
-                imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
-                Log.d(TAG, "imageReader created")
+//                mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
+//                imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */)
+//                imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
+//                Log.d(TAG, "imageReader created")
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
             }
@@ -193,37 +194,37 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         }
     }
 
-    object onImageAvailableListener : ImageReader.OnImageAvailableListener {
-        override fun onImageAvailable(reader: ImageReader?) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-    }
+//    object onImageAvailableListener : ImageReader.OnImageAvailableListener {
+//        override fun onImageAvailable(reader: ImageReader?) {
+//            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//        }
+//
+//    }
 
 
     override fun onStop() {
         super.onStop()
-        try {
-            if (mCaptureSession != null) {
-                mCaptureSession!!.stopRepeating()
-                mCaptureSession!!.close()
-                mCaptureSession = null
-            }
-
-            mIsCameraConfigured = false
-        } catch (e: CameraAccessException) {
-            // Doesn't matter, cloising device anyway
-            e.printStackTrace()
-        } catch (e2: IllegalStateException) {
-            // Doesn't matter, cloising device anyway
-            e2.printStackTrace()
-        } finally {
-            if (mCameraDevice != null) {
-                mCameraDevice!!.close()
-                mCameraDevice = null
-                mCaptureSession = null
-            }
-        }
+//        try {
+//            if (mCaptureSession != null) {
+//                mCaptureSession!!.stopRepeating()
+//                mCaptureSession!!.close()
+//                mCaptureSession = null
+//            }
+//
+//            mIsCameraConfigured = false
+//        } catch (e: CameraAccessException) {
+//            // Doesn't matter, cloising device anyway
+//            e.printStackTrace()
+//        } catch (e2: IllegalStateException) {
+//            // Doesn't matter, cloising device anyway
+//            e2.printStackTrace()
+//        } finally {
+//            if (mCameraDevice != null) {
+//                mCameraDevice!!.close()
+//                mCameraDevice = null
+//                mCaptureSession = null
+//            }
+//        }
     }
 
     /**
@@ -252,93 +253,93 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         }
     }
 
-    override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
-        mCameraSurface = holder!!.surface
-        mSurfaceCreated = true
-        mHandler.sendEmptyMessage(MSG_SURFACE_READY)
-    }
+//    override fun surfaceChanged(holder: SurfaceHolder?, format: Int, width: Int, height: Int) {
+//        mCameraSurface = holder!!.surface
+//        mSurfaceCreated = true
+//        mHandler.sendEmptyMessage(MSG_SURFACE_READY)
+//    }
+//
+//    override fun surfaceDestroyed(holder: SurfaceHolder?) {
+//        mSurfaceCreated = false
+//    }
+//
+//    override fun surfaceCreated(holder: SurfaceHolder?) {
+//        mCameraSurface = holder!!.getSurface();
+//    }
+//
+//    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+//
+//        when (requestCode) {
+//            MY_PERMISSIONS_REQUEST_CAMERA -> if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
+//                try {
+//                    mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
+//                } catch (e: CameraAccessException) {
+//                    e.printStackTrace()
+//                }
+//
+//        }
+//    }
+//
+//    override fun handleMessage(msg: Message): Boolean {
+//        when (msg.what) {
+//            MSG_CAMERA_OPENED, MSG_SURFACE_READY ->
+//                // if both surface is created and camera device is opened
+//                // - ready to set up preview and other things
+//                if (mSurfaceCreated && mCameraDevice != null
+//                        && !mIsCameraConfigured) {
+//                    configureCamera()
+//                }
+//        }
+//
+//        return true
+//    }
+//
+//    private fun configureCamera() {
+//        // prepare list of surfaces to be used in capture requests
+//        val sfl = ArrayList<Surface>()
+//
+//        sfl.add(mCameraSurface!!) // surface for viewfinder preview
+//
+//        // configure camera with all the surfaces to be ever used
+//        try {
+//            mCameraDevice!!.createCaptureSession(sfl, CaptureSessionListener(), null)
+//        } catch (e: CameraAccessException) {
+//            e.printStackTrace()
+//        }
+//
+//        mIsCameraConfigured = true
+//    }
+//
+//    inner class CaptureSessionListener : CameraCaptureSession.StateCallback() {
+//        override fun onConfigureFailed(session: CameraCaptureSession?) {
+//            Log.d(TAG, "CaptureSessionConfigure failed")
+//        }
+//
+//        override fun onConfigured(session: CameraCaptureSession?) {
+//            Log.d(TAG, "CaptureSessionConfigure onConfigured")
+//            mCaptureSession = session
+//
+//            try {
+//                val previewRequestBuilder = mCameraDevice!!
+//                        .createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+//                previewRequestBuilder.addTarget(mCameraSurface)
+//                mCaptureSession!!.setRepeatingRequest(previewRequestBuilder.build(),
+//                        null, null)
+//            } catch (e: CameraAccessException) {
+//                Log.d(TAG, "setting up preview failed");
+//                e.printStackTrace()
+//            }
+//        }
+//    }
 
-    override fun surfaceDestroyed(holder: SurfaceHolder?) {
-        mSurfaceCreated = false
-    }
-
-    override fun surfaceCreated(holder: SurfaceHolder?) {
-        mCameraSurface = holder!!.getSurface();
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        when (requestCode) {
-            MY_PERMISSIONS_REQUEST_CAMERA -> if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
-                try {
-                    mCameraManager.openCamera(mCameraIDsList[1], mCameraStateCB, Handler())
-                } catch (e: CameraAccessException) {
-                    e.printStackTrace()
-                }
-
-        }
-    }
-
-    override fun handleMessage(msg: Message): Boolean {
-        when (msg.what) {
-            MSG_CAMERA_OPENED, MSG_SURFACE_READY ->
-                // if both surface is created and camera device is opened
-                // - ready to set up preview and other things
-                if (mSurfaceCreated && mCameraDevice != null
-                        && !mIsCameraConfigured) {
-                    configureCamera()
-                }
-        }
-
-        return true
-    }
-
-    private fun configureCamera() {
-        // prepare list of surfaces to be used in capture requests
-        val sfl = ArrayList<Surface>()
-
-        sfl.add(mCameraSurface!!) // surface for viewfinder preview
-
-        // configure camera with all the surfaces to be ever used
-        try {
-            mCameraDevice!!.createCaptureSession(sfl, CaptureSessionListener(), null)
-        } catch (e: CameraAccessException) {
-            e.printStackTrace()
-        }
-
-        mIsCameraConfigured = true
-    }
-
-    inner class CaptureSessionListener : CameraCaptureSession.StateCallback() {
-        override fun onConfigureFailed(session: CameraCaptureSession?) {
-            Log.d(TAG, "CaptureSessionConfigure failed")
-        }
-
-        override fun onConfigured(session: CameraCaptureSession?) {
-            Log.d(TAG, "CaptureSessionConfigure onConfigured")
-            mCaptureSession = session
-
-            try {
-                val previewRequestBuilder = mCameraDevice!!
-                        .createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                previewRequestBuilder.addTarget(mCameraSurface)
-                mCaptureSession!!.setRepeatingRequest(previewRequestBuilder.build(),
-                        null, null)
-            } catch (e: CameraAccessException) {
-                Log.d(TAG, "setting up preview failed");
-                e.printStackTrace()
-            }
-        }
-    }
-
-    fun processImage(image: File): String {
-//        val ANDROID_DATA_DIR = "/data/data/com.sandro.openalprsample"
-        val openAlprConfFile = ANDROID_DATA_DIR + File.separatorChar + "runtime_data" + File.separatorChar + "openalpr.conf"
-        return OpenALPR.Factory
-                .create(this@MainActivity, ANDROID_DATA_DIR)
-                .recognizeWithCountryRegionNConfig("us", "", image.absolutePath, openAlprConfFile, 10)
-    }
+//    fun processImage(image: File): String {
+////        val ANDROID_DATA_DIR = "/data/data/com.sandro.openalprsample"
+//        val openAlprConfFile = ANDROID_DATA_DIR + File.separatorChar + "runtime_data" + File.separatorChar + "openalpr.conf"
+//        return OpenALPR.Factory
+//                .create(this@MainActivity, ANDROID_DATA_DIR)
+//                .recognizeWithCountryRegionNConfig("us", "", image.absolutePath, openAlprConfFile, 10)
+//    }
 
     companion object {
         private const val CODE_DRAW_OVER_OTHER_APP_PERMISSION = 2084
@@ -348,7 +349,5 @@ class MainActivity : AppCompatActivity(), SurfaceHolder.Callback, Handler.Callba
         private const val MSG_SURFACE_READY = 2
 
         const val ANDROID_DATA_DIR = "/data/data/${BuildConfig.APPLICATION_ID}"
-
-
     }
 }
