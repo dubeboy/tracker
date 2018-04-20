@@ -3,7 +3,6 @@ package com.dubedivine.tracker.activity
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -15,30 +14,26 @@ import android.provider.Settings
 import android.widget.Button
 import com.dubedivine.tracker.service.MainControlService
 import android.widget.Toast
-import android.util.Log
 import com.dubedivine.tracker.util.ActivityExtensions.toast
-import android.os.Handler
-import android.os.Message
 import android.support.v4.app.ActivityCompat
 import android.content.pm.PackageManager
-import android.graphics.ImageFormat
 import android.hardware.camera2.*
-import android.media.ImageReader
 import android.support.v4.content.ContextCompat
 import android.view.*
 import android.widget.TextView
 import com.dubedivine.tracker.BuildConfig
 import com.dubedivine.tracker.service.CameraService
+import com.dubedivine.tracker.util.IMAGE_PATH
+import com.dubedivine.tracker.util.getWindowPhoneWithAndHeight
 import kotlinx.android.synthetic.main.activity_main.*
-import org.openalpr.OpenALPR
 import java.io.File
+import java.util.*
+import kotlin.concurrent.timerTask
 
-
-class MainActivity : AppCompatActivity()/*, SurfaceHolder.Callback, Handler.Callback*/ {
+class MainActivity : AppCompatActivity() {
 
 
     private lateinit var dialog: AlertDialog.Builder
-    private var imageReader: ImageReader? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,26 +43,38 @@ class MainActivity : AppCompatActivity()/*, SurfaceHolder.Callback, Handler.Call
         dialog = createAlertDialog()
 
         val intent = Intent(this, CameraService::class.java)
+        val (width, height) = getWindowPhoneWithAndHeight(this)
+        intent.putExtra(CameraService.WIDTH, width)
+        intent.putExtra(CameraService.HEIGHT, height)
         startService(intent)
 
         // the is for the over head
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-
-            val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
-            startActivityForResult(intent, CODE_DRAW_OVER_OTHER_APP_PERMISSION)
+            val intent1 = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName"))
+            startActivityForResult(intent1, CODE_DRAW_OVER_OTHER_APP_PERMISSION)
         } else {
             initializeView()
         }
-
-
-
-
-
         // for now I can do it easy just capture the images at an interval
         fab_capture_plate.setOnClickListener({
           //  mCameraDevice?
         })
+        setUpImageView()
 
+
+    }
+
+    private fun setUpImageView() {
+
+        Thread({
+            val t = Timer(true)
+            t.scheduleAtFixedRate(timerTask {
+                runOnUiThread({
+                    imageView.setImageURI(Uri.fromFile(File(IMAGE_PATH)))
+                })
+            }, 0, 2000) // 2 milliseconds
+
+        }).start()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

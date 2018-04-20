@@ -13,6 +13,10 @@ import android.os.IBinder
 import android.support.v4.app.ActivityCompat
 import android.util.Log
 import com.dubedivine.tracker.activity.MainActivity
+import com.dubedivine.tracker.data.remote.FireStorePersitanceHelper
+import com.dubedivine.tracker.util.IMAGE_PATH
+import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
 import org.openalpr.OpenALPR
 import java.io.File
 import java.io.FileNotFoundException
@@ -26,6 +30,7 @@ class CameraService : Service() {
     private var cameraDevice: CameraDevice? = null
     private var cameraCaptureSession: CameraCaptureSession? = null
     private var imageReader: ImageReader? = null
+    private lateinit var mFireStorePersitanceHelper: FireStorePersitanceHelper
 
     //   A callback object for receiving updates about the state of a camera capture session.
     private val cameraDeviceStateCallback = object : CameraDevice.StateCallback() {
@@ -90,7 +95,7 @@ class CameraService : Service() {
         var buffer: ByteBuffer? = null
         var bytes: ByteArray
         var success = false
-        var file = File(Environment.getExternalStorageDirectory().toString() + "/Pictures/image.jpg")
+        var file = File(IMAGE_PATH)
         var output: FileOutputStream? = null
 
         if (image.format == ImageFormat.JPEG) {
@@ -102,8 +107,18 @@ class CameraService : Service() {
                 output.write(bytes)    // write the byte array to file
 //                j++;
                 success = true
-                val result = analyseImage(file)
-                Log.d(TAG, "the result is $result")
+
+                //Todo these threads should be added to thread pool please
+                Thread({
+                    val result = analyseImage(file)
+                    Log.d(TAG, "the result is $result")
+                    if (!result.isNullOrBlank()) {
+                        mFireStorePersitanceHelper.persistNumberPlateToCloud(result)
+                    } else {
+                        Log.w(TAG , "could not get the number plate sir")
+                    }
+                }).start()
+
             } catch (e: FileNotFoundException) {
                 e.printStackTrace()
             } catch (e: IOException) {
@@ -136,7 +151,10 @@ class CameraService : Service() {
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand flags  $flags startId $startId")
 
-        readyCamera()
+        val width = intent.getIntExtra(WIDTH, 0)
+        val height = intent.getIntExtra(HEIGHT, 0)
+
+        readyCamera(width, height)
 
         return super.onStartCommand(intent, flags, startId)
     }
@@ -152,11 +170,20 @@ class CameraService : Service() {
     }
 
     override fun onCreate() {
-        Log.d(TAG, "onCreate service")
         super.onCreate()
+        Log.d(TAG, "onCreate service")
+        mFireStorePersitanceHelper =
+                FireStorePersitanceHelper (
+                        this,
+                        OnSuccessListener {
+                            Log.d(TAG, "saved item successfully here id the Id:  ${it.id}")
+                        }, OnFailureListener {
+                            Log.e(TAG, "failed to save to fireStore. Error:   ${it.message}")
+                        }
+                )
     }
 
-    private fun readyCamera() {
+    private fun readyCamera(width: Int, height: Int) {
         val manager = getSystemService(CAMERA_SERVICE) as CameraManager
         try {
             val pickedCamera = getCamera(manager)
@@ -165,10 +192,10 @@ class CameraService : Service() {
                 // we can grant it permissions
                 return
             }
-            manager.openCamera(pickedCamera, cameraDeviceStateCallback, null);
-            imageReader = ImageReader.newInstance(1920, 1088, ImageFormat.JPEG, 2 /* images buffered */);
+            manager.openCamera(pickedCamera, cameraDeviceStateCallback, null)
+            imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2 /* images buffered */)
             imageReader!!.setOnImageAvailableListener(onImageAvailableListener, null)
-            Log.d(TAG, "imageReader created");
+            Log.d(TAG, "imageReader created")
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.message)
         }
@@ -194,13 +221,15 @@ class CameraService : Service() {
     }
 
 
-    override fun onBind(intent: Intent): IBinder {
-        TODO("Return the communication channel to the service.")
+    override fun onBind(intent: Intent): IBinder? {
+        return null
     }
 
 
     companion object {
         private const val TAG = "CameraService"
+        const val WIDTH: String = "width"
+        const val HEIGHT: String = "height"
         private const val CAMERA_CHOICE = CameraCharacteristics.LENS_FACING_BACK
     }
 }
