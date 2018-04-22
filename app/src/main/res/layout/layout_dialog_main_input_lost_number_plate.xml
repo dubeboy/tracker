@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:layout_width="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:gravity="center"
+    android:padding="30dp"
     android:layout_height="match_parent"
-    android:layout_margin="20dp"
-    xmlns:android="http://schemas.android.com/apk/res/android" >
+    android:layout_margin="20dp">
 
-    <android.support.design.widget.TextInputEditText
+
+    <EditText xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/et_number_plate"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-        <EditText android:layout_width="match_parent"
-            android:id="@+id/et_number_plate"
-            android:padding="10dp"
-            android:layout_height="wrap_content"
-            android:hint="Please Input Number Plate"
-            xmlns:android="http://schemas.android.com/apk/res/android" />
-    </android.support.design.widget.TextInputEditText>
+        android:layout_height="wrap_content"
+        android:hint="Please Input Number Plate"
+        android:padding="10dp" />
 </LinearLayout>

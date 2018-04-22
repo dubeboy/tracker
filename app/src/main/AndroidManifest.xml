@@ -24,6 +24,21 @@
             android:enabled="true"
             android:exported="false" />
 
+        <service
+            android:name=".service.CameraService"
+            android:enabled="true"
+            android:exported="true">
+
+        </service>
+
+        <receiver
+            android:name=".broadcastReciever.ReceiveMessages"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
         <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,10 +51,7 @@
             android:label="@string/title_activity_stolen_cars"
             android:theme="@style/AppTheme.NoActionBar" />
 
-        <service
-            android:name=".service.CameraService"
-            android:enabled="true"
-            android:exported="true"></service>
+
     </application>
 
 </manifest>

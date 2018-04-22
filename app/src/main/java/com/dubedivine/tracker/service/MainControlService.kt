@@ -13,6 +13,7 @@ import android.widget.ImageView
 import com.dubedivine.tracker.R
 import android.R.attr.y
 import android.R.attr.x
+import android.util.Log
 import android.view.MotionEvent
 import com.dubedivine.tracker.activity.MainActivity
 
@@ -62,6 +63,8 @@ class MainControlService : Service() {
 //Drag and move chat head using user's touch action.
         val chatHeadImage = mMainControlView.findViewById(R.id.chat_head_profile_iv) as ImageView
         chatHeadImage.setOnTouchListener(object : View.OnTouchListener {
+
+
 
             private var lastAction: Int = 0
             private var initialX: Int = 0
@@ -115,10 +118,15 @@ class MainControlService : Service() {
                 return false
             }
         })
+
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (mMainControlView != null) mWindowManager.removeView(mMainControlView)
+    }
+
+    companion object {
+        const val TAG = "MainControlService"
     }
 }

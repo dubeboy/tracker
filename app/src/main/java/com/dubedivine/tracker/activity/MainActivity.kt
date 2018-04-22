@@ -3,11 +3,10 @@ package com.dubedivine.tracker.activity
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
-import android.content.DialogInterface
+import android.content.*
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import com.dubedivine.tracker.R
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -19,21 +18,30 @@ import android.support.v4.app.ActivityCompat
 import android.content.pm.PackageManager
 import android.hardware.camera2.*
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.view.*
 import android.widget.TextView
 import com.dubedivine.tracker.BuildConfig
+import com.dubedivine.tracker.data.remote.FireStorePersitanceHelper
 import com.dubedivine.tracker.service.CameraService
+import com.dubedivine.tracker.util.ActivityExtensions.snack
 import com.dubedivine.tracker.util.IMAGE_PATH
 import com.dubedivine.tracker.util.getWindowPhoneWithAndHeight
+import com.google.android.gms.tasks.OnFailureListener
+import com.google.android.gms.tasks.OnSuccessListener
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.util.*
 import kotlin.concurrent.timerTask
+import com.dubedivine.tracker.broadcastReciever.ReceiveMessages
 
 class MainActivity : AppCompatActivity() {
 
 
     private lateinit var dialog: AlertDialog.Builder
+    private var recieverRegisterd = false
+    private var receiver: ReceiveMessages? = null
+    private lateinit var fireStorePersistenceHelper: FireStorePersitanceHelper
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,10 +65,18 @@ class MainActivity : AppCompatActivity() {
         }
         // for now I can do it easy just capture the images at an interval
         fab_capture_plate.setOnClickListener({
-          //  mCameraDevice?
+            //  mCameraDevice?
         })
-        setUpImageView()
 
+        setUpImageView()
+        fireStorePersistenceHelper = FireStorePersitanceHelper (this,
+                OnSuccessListener {
+                    Log.d(TAG, "ans is $it")
+                    snack("Reported car")
+                }, OnFailureListener {
+                    snack("Failed to report car, Please try again")
+                }
+        )
 
     }
 
@@ -68,12 +84,16 @@ class MainActivity : AppCompatActivity() {
 
         Thread({
             val t = Timer(true)
-            t.scheduleAtFixedRate(timerTask {
-                runOnUiThread({
-                    imageView.setImageURI(Uri.fromFile(File(IMAGE_PATH)))
-                })
-            }, 0, 2000) // 2 milliseconds
+            t.schedule(timerTask {
+                Log.d(TAG, "loading image bro")
 
+                runOnUiThread({
+                    imageView.setImageURI(null)
+                    imageView.setImageURI(Uri.fromFile(File(IMAGE_PATH)))
+                    imageView.invalidate()
+                })
+            }, 0, 2000)
+            // 2 milliseconds
         }).start()
     }
 
@@ -86,18 +106,19 @@ class MainActivity : AppCompatActivity() {
     private fun createAlertDialog(): AlertDialog.Builder {
         val view = layoutInflater.inflate(R.layout.layout_dialog_main_input_lost_number_plate, null)
         val builder = AlertDialog.Builder(this)
+        builder.setTitle("Enter Stolen Car Number Plate")
         builder.setView(view).setPositiveButton("REPORT", DialogInterface.OnClickListener
         { dialog, which ->
             val numberPlate = view.findViewById<TextView>(R.id.et_number_plate)
             reportNumberPlate(numberPlate.text)
             dialog.dismiss()
-        } ).create()
+        }).create()
 
         return builder
     }
 
     private fun reportNumberPlate(text: CharSequence?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        fireStorePersistenceHelper.persistNumberPlateToCloud(text.toString())
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -107,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                 dialog.show()
             }
             R.id.menu_show_reported_cars -> {
-               startActivity(StolenCars.getStartIntent(this))
+                startActivity(StolenCars.getStartIntent(this))
             }
 
         }
@@ -135,7 +156,7 @@ class MainActivity : AppCompatActivity() {
                 toast("request permission")
             }
         } else {
-            toast("PERMISSION_ALREADY_GRANTED")
+         //   toast("PERMISSION_ALREADY_GRANTED")
             try {
 
             } catch (e: CameraAccessException) {
@@ -149,6 +170,24 @@ class MainActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!recieverRegisterd) {
+            receiver = ReceiveMessages(tv_status)
+            val filter = IntentFilter(BuildConfig.APPLICATION_ID)
+            registerReceiver(receiver, filter)
+            recieverRegisterd = true
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (recieverRegisterd) {
+            unregisterReceiver(receiver)
+            recieverRegisterd = false
+        }
     }
 
     /**
@@ -187,4 +226,5 @@ class MainActivity : AppCompatActivity() {
 
         const val ANDROID_DATA_DIR = "/data/data/${BuildConfig.APPLICATION_ID}"
     }
+
 }

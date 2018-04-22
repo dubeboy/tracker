@@ -8,10 +8,10 @@ import android.graphics.ImageFormat
 import android.hardware.camera2.*
 import android.media.Image
 import android.media.ImageReader
-import android.os.Environment
-import android.os.IBinder
+import android.os.*
 import android.support.v4.app.ActivityCompat
 import android.util.Log
+import com.dubedivine.tracker.BuildConfig
 import com.dubedivine.tracker.activity.MainActivity
 import com.dubedivine.tracker.data.remote.FireStorePersitanceHelper
 import com.dubedivine.tracker.util.IMAGE_PATH
@@ -31,6 +31,7 @@ class CameraService : Service() {
     private var cameraCaptureSession: CameraCaptureSession? = null
     private var imageReader: ImageReader? = null
     private lateinit var mFireStorePersitanceHelper: FireStorePersitanceHelper
+    private lateinit var intent: Intent
 
     //   A callback object for receiving updates about the state of a camera capture session.
     private val cameraDeviceStateCallback = object : CameraDevice.StateCallback() {
@@ -65,6 +66,7 @@ class CameraService : Service() {
                 // With this method, the camera device will continually capture images using the
                 // settings in the provided CaptureRequest, at the maximum rate possible.
                 session.setRepeatingRequest(createCaptureRequest(), null, null)
+                Thread.sleep(2000)
             } catch (e: CameraAccessException) {
                 Log.e(TAG, "CameraAccessException thrown")
                 e.printStackTrace()
@@ -76,11 +78,10 @@ class CameraService : Service() {
 
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener { reader ->
         Log.d(TAG, "Image is availbale mate")
-        val img: Image? = reader?.acquireLatestImage()
-        if (img != null) {
-            processImage(img)
-            img.close()
-        }
+            val img: Image? = reader?.acquireLatestImage()
+            if (img != null) {
+                processImage(img)
+            }
     }
 
     fun analyseImage(image: File): String {
@@ -88,53 +89,57 @@ class CameraService : Service() {
         val openAlprConfFile = MainActivity.ANDROID_DATA_DIR + File.separatorChar + "runtime_data" + File.separatorChar + "openalpr.conf"
         return OpenALPR.Factory
                 .create(this, MainActivity.ANDROID_DATA_DIR)
-                .recognizeWithCountryRegionNConfig("us", "", image.absolutePath, openAlprConfFile, 10)
+                .recognizeWithCountryRegionNConfig("eu", "", image.absolutePath, openAlprConfFile, 10)
     }
 
     private fun processImage(image: Image) {
-        var buffer: ByteBuffer? = null
-        var bytes: ByteArray
-        var success = false
-        var file = File(IMAGE_PATH)
-        var output: FileOutputStream? = null
+            var buffer: ByteBuffer? = null
+            var bytes: ByteArray
+            var success = false
+            var file = File(IMAGE_PATH)
+            var output: FileOutputStream? = null
 
-        if (image.format == ImageFormat.JPEG) {
-            buffer = image.planes[0].buffer
-            bytes = ByteArray(buffer.remaining()) // makes byte array large enough to hold image
-            buffer.get(bytes) // copies image from buffer to byte array
-            try {
-                output = FileOutputStream(file)
-                output.write(bytes)    // write the byte array to file
-//                j++;
-                success = true
+            if (image.format == ImageFormat.JPEG) {
+                buffer = image.planes[0].buffer
+                bytes = ByteArray(buffer.remaining()) // makes byte array large enough to hold image
+                buffer.get(bytes) // copies image from buffer to byte array
+                try {
+                    output = FileOutputStream(file)
+                    output.write(bytes)    // write the byte array to file
+                    success = true
 
-                //Todo these threads should be added to thread pool please
-                Thread({
-                    val result = analyseImage(file)
-                    Log.d(TAG, "the result is $result")
-                    if (!result.isNullOrBlank()) {
-                        mFireStorePersitanceHelper.persistNumberPlateToCloud(result)
-                    } else {
-                        Log.w(TAG , "could not get the number plate sir")
-                    }
-                }).start()
+                    //Todo these threads should be added to thread pool please
 
-            } catch (e: FileNotFoundException) {
-                e.printStackTrace()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } finally {
-                image.close() // close this to free up buffer for other images
-                if (null != output) {
-                    try {
-                        output.close();
-                    } catch (e: IOException) {
-                        e.printStackTrace();
+                    AnalyseImageThreadPool.execute(Runnable {
+                        val result: String? = analyseImage(file)
+                        if (result != null && result.isNotBlank()) {
+                            Log.d(TAG, "got number plate: $result")
+                            mFireStorePersitanceHelper.persistNumberPlateToCloud(result)
+                            intent.putExtra(EXTRA_IMAGE_RESULT, "Sent number plate")
+                            sendBroadcast(intent)
+                        } else {
+                            Log.w(TAG, "could not get the number plate")
+                            intent.putExtra(EXTRA_IMAGE_RESULT, "0000000")
+                            sendBroadcast(intent) // send some message to the MainActivity
+                        }
+                    })
+                } catch (e: FileNotFoundException) {
+                    e.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                } finally {
+                    image.close()
+                    // close this to free up buffer for other images
+                    if (null != output) {
+                        try {
+                            output.close();
+                        } catch (e: IOException) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
 
-        }
+            }
 
     }
 
@@ -173,17 +178,20 @@ class CameraService : Service() {
         super.onCreate()
         Log.d(TAG, "onCreate service")
         mFireStorePersitanceHelper =
-                FireStorePersitanceHelper (
+                FireStorePersitanceHelper(
                         this,
                         OnSuccessListener {
                             Log.d(TAG, "saved item successfully here id the Id:  ${it.id}")
                         }, OnFailureListener {
-                            Log.e(TAG, "failed to save to fireStore. Error:   ${it.message}")
-                        }
+                    Log.e(TAG, "failed to save to fireStore. Error:   ${it.message}")
+                }
                 )
+
+        intent = Intent(BuildConfig.APPLICATION_ID)
     }
 
     private fun readyCamera(width: Int, height: Int) {
+
         val manager = getSystemService(CAMERA_SERVICE) as CameraManager
         try {
             val pickedCamera = getCamera(manager)
@@ -231,5 +239,7 @@ class CameraService : Service() {
         const val WIDTH: String = "width"
         const val HEIGHT: String = "height"
         private const val CAMERA_CHOICE = CameraCharacteristics.LENS_FACING_BACK
+        const val EXTRA_IMAGE_RESULT = "extra_img_res"
+
     }
 }
